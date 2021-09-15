@@ -1,0 +1,66 @@
+//
+// !!! WARNING !!! AUTO-GENERATED FILE!
+// PLEASE DO NOT MODIFY IT AND USE "platformio.ini":
+// https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags
+//
+{
+    "configurations": [
+        {
+            "name": "PlatformIO",
+            "includePath": [
+                "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/include",
+                "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/src",
+                "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/BH1750/src",
+                "/home/robson/.platformio/packages/framework-arduino-avr/libraries/Wire/src",
+                "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/Adafruit DHT Unified",
+                "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/DHT sensor library",
+                "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/Adafruit Unified Sensor",
+                "/home/robson/.platformio/packages/framework-arduino-avr/cores/arduino",
+                "/home/robson/.platformio/packages/framework-arduino-avr/variants/mega",
+                "/home/robson/.platformio/packages/framework-arduino-avr/libraries/EEPROM/src",
+                "/home/robson/.platformio/packages/framework-arduino-avr/libraries/HID/src",
+                "/home/robson/.platformio/packages/framework-arduino-avr/libraries/SPI/src",
+                "/home/robson/.platformio/packages/framework-arduino-avr/libraries/SoftwareSerial/src",
+                "/home/robson/.platformio/packages/tool-unity",
+                ""
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/include",
+                    "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/src",
+                    "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/BH1750/src",
+                    "/home/robson/.platformio/packages/framework-arduino-avr/libraries/Wire/src",
+                    "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/Adafruit DHT Unified",
+                    "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/DHT sensor library",
+                    "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/Adafruit Unified Sensor",
+                    "/home/robson/.platformio/packages/framework-arduino-avr/cores/arduino",
+                    "/home/robson/.platformio/packages/framework-arduino-avr/variants/mega",
+                    "/home/robson/.platformio/packages/framework-arduino-avr/libraries/EEPROM/src",
+                    "/home/robson/.platformio/packages/framework-arduino-avr/libraries/HID/src",
+                    "/home/robson/.platformio/packages/framework-arduino-avr/libraries/SPI/src",
+                    "/home/robson/.platformio/packages/framework-arduino-avr/libraries/SoftwareSerial/src",
+                    "/home/robson/.platformio/packages/tool-unity",
+                    ""
+                ]
+            },
+            "defines": [
+                "PLATFORMIO=50101",
+                "ARDUINO_AVR_MEGA2560",
+                "F_CPU=16000000L",
+                "ARDUINO_ARCH_AVR",
+                "ARDUINO=10808",
+                "__AVR_ATmega2560__",
+                ""
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "compilerPath": "/home/robson/.platformio/packages/toolchain-atmelavr/bin/avr-gcc",
+            "compilerArgs": [
+                "-mmcu=atmega2560",
+                ""
+            ]
+        }
+    ],
+    "version": 4
+}
