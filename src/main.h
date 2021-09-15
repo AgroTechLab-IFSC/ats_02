@@ -16,6 +16,12 @@
 #ifdef SENSOR_LIGHT_ENABLED
     #include <BH1750.h>
 #endif
+#ifdef ONE_WIRE_ENABLED
+    #include <OneWire.h>
+#endif
+#ifdef SENSOR_SOIL_TEMP_ENABLED
+    #include <DallasTemperature.h>
+#endif
 
 struct station_sensor_t {
     #ifdef SENSOR_DHT_ENABLED
@@ -31,6 +37,14 @@ struct station_sensor_t {
     #ifdef SENSOR_UV_ENABLED
         uint32_t uvVoltage = 0;
         uint8_t uvVoltageCount = 0;
+    #endif
+    #ifdef SENSOR_SOIL_TEMP_ENABLED
+        float soilTemp = 0.0f;
+        uint8_t soilTempCount = 0;
+    #endif
+    #ifdef SENSOR_SOIL_MOISTURE_ENABLED
+        uint16_t soilMoisture = 0;
+        uint8_t soilMoistureCount = 0;
     #endif
 };
 
@@ -68,6 +82,13 @@ station_sensor_t sensorsData;
 #endif
 #ifdef SENSOR_LIGHT_ENABLED
     BH1750 lightSensor; /**< Global variable to access light sensor (GY-30). */
+#endif
+#ifdef ONE_WIRE_ENABLED
+    OneWire oneWire;
+    #ifdef SENSOR_SOIL_TEMP_ENABLED
+        DallasTemperature soil_temp_sensor;
+        DeviceAddress soil_temp_sensor_addr;
+    #endif
 #endif
 
 /*******************************************************
@@ -204,12 +225,14 @@ void resetSensorDataStruct() {
     #ifdef SENSOR_UV_ENABLED
         sensorsData.uvVoltage = 0;
         sensorsData.uvVoltageCount = 0;
+    #endif    
+    #ifdef SENSOR_SOIL_TEMP_ENABLED
+        sensorsData.soilTemp = 0.0f;
+        sensorsData.soilTempCount = 0;
     #endif
     #ifdef SENSOR_SOIL_MOISTURE_ENABLED
-        sensorsData.soil_moisture = 0;
-    #endif
-    #ifdef SENSOR_SOIL_TEMP_ENABLED
-        sensorsData.soil_temperature = 0.0f;
+        sensorsData.soilMoisture = 0;
+        sensorsData.soilMoistureCount = 0;
     #endif
 //     // uint8_t leaf_surface_moisture[2] = {0, 0};
     #ifdef SENSOR_WIND_SOCK_ENABLED
@@ -244,7 +267,7 @@ uint8_t convertVoltsToIndex(uint16_t miliVolts) {
         return 9;
     } else if (miliVolts >= 1079 && miliVolts < 1170) {
         return 10;
-    } else if (miliVolts >= 1170) {
+    } else {
         return 11;
     }  
 }

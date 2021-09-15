@@ -10,6 +10,8 @@
             "includePath": [
                 "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/include",
                 "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/src",
+                "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/DallasTemperature",
+                "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/OneWire",
                 "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/BH1750/src",
                 "/home/robson/.platformio/packages/framework-arduino-avr/libraries/Wire/src",
                 "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/Adafruit DHT Unified",
@@ -29,6 +31,8 @@
                 "path": [
                     "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/include",
                     "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/src",
+                    "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/DallasTemperature",
+                    "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/OneWire",
                     "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/BH1750/src",
                     "/home/robson/.platformio/packages/framework-arduino-avr/libraries/Wire/src",
                     "/home/robson/GDrive/workspaces/agrotechlab/agrotech4all/ats_02/.pio/libdeps/megaatmega2560/Adafruit DHT Unified",

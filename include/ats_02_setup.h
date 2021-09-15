@@ -52,6 +52,26 @@ const char* power_supply_str[] = {"Battery", "Power Line"};
  */
 #define SENSOR_UV_ENABLED
 
+/**
+ * \def ONE_WIRE_ENABLED 
+ * Enable or disable one wire interface.
+ */
+#define ONE_WIRE_ENABLED
+
+#ifdef ONE_WIRE_ENABLED
+    /**
+    * \def SENSOR_SOIL_TEMP_ENABLED 
+    * Enable or disable soil temperature sensor.
+    */
+    #define SENSOR_SOIL_TEMP_ENABLED    
+#endif
+
+/**
+ * \def SENSOR_SOIL_MOISTURE_ENABLED 
+ * Enable or disable soil moisture sensor.
+ */
+#define SENSOR_SOIL_MOISTURE_ENABLED
+
 /*******************************************************
  *                 DEVICE PARAMETERS
  *******************************************************/
@@ -185,6 +205,22 @@ const char* power_supply_str[] = {"Battery", "Power Line"};
     * UV sensor pin.
     */
     #define SENSOR_UV_PIN               A0
+#endif
+
+#ifdef ONE_WIRE_ENABLED
+    /**
+    * \def ONE_WIRE_PIN 
+    * One Wire interface pin.
+    */
+    #define ONE_WIRE_PIN                51
+#endif
+
+#ifdef SENSOR_SOIL_MOISTURE_ENABLED
+    /**
+    * \def SENSOR_SOIL_MOISTURE_PIN 
+    * Soil moisture sensor pin.
+    */
+    #define SENSOR_SOIL_MOISTURE_PIN    A1
 #endif
 
 /*******************************************************

@@ -77,6 +77,39 @@ void setup() {
     #endif
   #endif
 
+  // Initiate One Wire interface
+  #ifdef ONE_WIRE_ENABLED
+    #ifdef SERIAL_DEBUG_ENABLED
+        SERIAL_DEBUG.print(F("\n\tInitiating One Wire interface... "));
+    #endif
+    oneWire.begin(ONE_WIRE_PIN);
+    #ifdef SERIAL_DEBUG_ENABLED
+        SERIAL_DEBUG.print(F("[OK]"));
+    #endif
+    
+    #ifdef SENSOR_SOIL_TEMP_ENABLED
+      #ifdef SERIAL_DEBUG_ENABLED
+          SERIAL_DEBUG.print(F("\n\t\tInitiating soil temperature sensor... "));
+      #endif
+      soil_temp_sensor.setOneWire(&oneWire);
+      soil_temp_sensor.begin();
+      soil_temp_sensor.getAddress(soil_temp_sensor_addr, 0);
+      #ifdef SERIAL_DEBUG_ENABLED
+          SERIAL_DEBUG.print(F("[OK]"));
+      #endif
+    #endif // SENSOR_SOIL_TEMP_ENABLED 
+  #endif
+
+  #ifdef SENSOR_SOIL_MOISTURE_ENABLED
+    #ifdef SERIAL_DEBUG_ENABLED
+      SERIAL_DEBUG.print(F("\n\tInitiating soil moisture sensor... "));
+    #endif
+    pinMode(SENSOR_SOIL_MOISTURE_PIN, INPUT);
+    #ifdef SERIAL_DEBUG_ENABLED
+      SERIAL_DEBUG.print(F("[OK]"));
+    #endif
+  #endif
+
   // If setup status OK, turn off RGB LED
   if (POWER_SUPPLY == POWER_LINE) {
     
@@ -137,6 +170,12 @@ void loop() {
           rgb_led.on(Color(0,255,0));
         #endif
 
+        // Initiage sampling process
+        #ifdef SERIAL_DEBUG_ENABLED
+          SERIAL_DEBUG.print(F("\n\n========= Sampling sensor values at ")); SERIAL_DEBUG.print(now); SERIAL_DEBUG.print(F(" miliseconds ========="));
+          SERIAL_DEBUG.flush();
+        #endif
+
         // Get DHT sensor values
         #ifdef SENSOR_DHT_ENABLED
           if (getDHTTemperature() != 0) {
@@ -182,10 +221,50 @@ void loop() {
             sensorsData.uvVoltage += sensorVoltage;
             sensorsData.uvVoltageCount++;
             #ifdef SERIAL_DEBUG_ENABLED
-              SERIAL_DEBUG.print(F("\nUV tension: ")); SERIAL_DEBUG.print(sensorVoltage); SERIAL_DEBUG.print(F(" miliVolts => Index: "));
+              SERIAL_DEBUG.print(F("\nUV voltage: ")); SERIAL_DEBUG.print(sensorVoltage); SERIAL_DEBUG.print(F(" miliVolts => Index: "));
               SERIAL_DEBUG.print(convertVoltsToIndex(sensorVoltage));
             #endif
           }
+        #endif
+
+        // Get soil temperature sensor value
+        #ifdef SENSOR_SOIL_TEMP_ENABLED
+          soil_temp_sensor.requestTemperatures();
+          float soil_temp = soil_temp_sensor.getTempC(soil_temp_sensor_addr);
+          if (isnan(soil_temp)) {
+            #ifdef SERIAL_DEBUG_ENABLED
+              SERIAL_DEBUG.println(F("Fail reading soil temperature sensor..."));
+            #endif
+          } else {
+            sensorsData.soilTemp += soil_temp;
+            sensorsData.soilTempCount++;
+            #ifdef SERIAL_DEBUG_ENABLED
+              SERIAL_DEBUG.print(F("\nSoil temperature: ")); SERIAL_DEBUG.print(soil_temp); SERIAL_DEBUG.print(F(" oC"));
+            #endif
+          }
+        #endif
+
+        // Get soil moisture sensor value
+        #ifdef SENSOR_SOIL_MOISTURE_ENABLED
+          int soil_analog = analogRead(SENSOR_SOIL_MOISTURE_PIN);
+          if (isnan(soil_analog)) {
+            #ifdef SERIAL_DEBUG_ENABLED
+              SERIAL_DEBUG.println(F("Fail reading soil moisture sensor..."));
+            #endif
+          } else {
+            sensorsData.soilMoisture += map(soil_analog, 0, 1023, 100, 0);
+            sensorsData.soilMoistureCount++;
+            #ifdef SERIAL_DEBUG_ENABLED
+              SERIAL_DEBUG.print(F("\nSoil moisture: ")); SERIAL_DEBUG.print(soil_analog); SERIAL_DEBUG.print(F(" (0 - 1023) => "));
+              SERIAL_DEBUG.print(map(soil_analog, 0, 1023, 100, 0)); SERIAL_DEBUG.print(F(" %"));
+            #endif
+          }
+        #endif
+
+        // Terminating sampling process
+        #ifdef SERIAL_DEBUG_ENABLED
+          SERIAL_DEBUG.print(F("\n===========================================================\n"));    
+          SERIAL_DEBUG.flush();
         #endif
 
         // Power off RGB LED
@@ -219,16 +298,22 @@ void loop() {
         delay(500);
 
         // Check if serial debug is enabled
-        #ifdef SERIAL_DEBUG_ENABLED        
-          SERIAL_DEBUG.print("\nAverage air temperature: "); SERIAL_DEBUG.print(sensorsData.airTemp/sensorsData.airTempCount);
-          SERIAL_DEBUG.print(" oC ("); SERIAL_DEBUG.print(sensorsData.airTempCount); SERIAL_DEBUG.print(" sampling)");
-          SERIAL_DEBUG.print("\nAverage air humidity: "); SERIAL_DEBUG.print(sensorsData.airHumid/sensorsData.airHumidCount);
-          SERIAL_DEBUG.print(" oC ("); SERIAL_DEBUG.print(sensorsData.airHumidCount); SERIAL_DEBUG.print(" sampling)");
-          SERIAL_DEBUG.print("\nAverage light: "); SERIAL_DEBUG.print(sensorsData.light/sensorsData.lightCount);
-          SERIAL_DEBUG.print(" lux ("); SERIAL_DEBUG.print(sensorsData.lightCount); SERIAL_DEBUG.print(" sampling)");
-          SERIAL_DEBUG.print("\nAverage UV tension: "); SERIAL_DEBUG.print(sensorsData.uvVoltage/sensorsData.uvVoltageCount);
-          SERIAL_DEBUG.print(" miliVolts => Index: "); SERIAL_DEBUG.print(convertVoltsToIndex(sensorsData.uvVoltage/sensorsData.uvVoltageCount));
-          SERIAL_DEBUG.print(" ("); SERIAL_DEBUG.print(sensorsData.uvVoltageCount); SERIAL_DEBUG.print(" sampling)");          
+        #ifdef SERIAL_DEBUG_ENABLED   
+          SERIAL_DEBUG.print(F("\n\n========= Transmitting average values at ")); SERIAL_DEBUG.print(now); SERIAL_DEBUG.print(F(" milliseconds ========="));
+          SERIAL_DEBUG.print(F("\nAverage air temperature: ")); SERIAL_DEBUG.print(sensorsData.airTemp/sensorsData.airTempCount);
+          SERIAL_DEBUG.print(F(" oC (")); SERIAL_DEBUG.print(sensorsData.airTempCount); SERIAL_DEBUG.print(F(" sampling)"));
+          SERIAL_DEBUG.print(F("\nAverage air humidity: ")); SERIAL_DEBUG.print(sensorsData.airHumid/sensorsData.airHumidCount);
+          SERIAL_DEBUG.print(F(" oC (")); SERIAL_DEBUG.print(sensorsData.airHumidCount); SERIAL_DEBUG.print(F(" sampling)"));
+          SERIAL_DEBUG.print(F("\nAverage light: ")); SERIAL_DEBUG.print(sensorsData.light/sensorsData.lightCount);
+          SERIAL_DEBUG.print(F(" lux (")); SERIAL_DEBUG.print(sensorsData.lightCount); SERIAL_DEBUG.print(F(" sampling)"));
+          SERIAL_DEBUG.print(F("\nAverage UV tension: ")); SERIAL_DEBUG.print(sensorsData.uvVoltage/sensorsData.uvVoltageCount);
+          SERIAL_DEBUG.print(F(" miliVolts => Index: ")); SERIAL_DEBUG.print(convertVoltsToIndex(sensorsData.uvVoltage/sensorsData.uvVoltageCount));
+          SERIAL_DEBUG.print(F(" (")); SERIAL_DEBUG.print(sensorsData.uvVoltageCount); SERIAL_DEBUG.print(F(" sampling)"));    
+          SERIAL_DEBUG.print(F("\nAverage soil temperature: ")); SERIAL_DEBUG.print(sensorsData.soilTemp/sensorsData.soilTempCount);
+          SERIAL_DEBUG.print(F(" oC (")); SERIAL_DEBUG.print(sensorsData.soilTempCount); SERIAL_DEBUG.print(F(" sampling)")); 
+          SERIAL_DEBUG.print(F("\nAverage soil moisture: ")); SERIAL_DEBUG.print(sensorsData.soilMoisture/sensorsData.soilMoistureCount);
+          SERIAL_DEBUG.print(F(" % (")); SERIAL_DEBUG.print(sensorsData.soilMoistureCount); SERIAL_DEBUG.print(F(" sampling)"));   
+          SERIAL_DEBUG.print(F("\n===========================================================\n"));    
           SERIAL_DEBUG.flush();
         #endif
 
