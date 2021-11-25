@@ -1,4 +1,5 @@
 #include "main.h"
+#include "convert_tools.h"
 
 void setup() {
   static uint8_t setupStatus = 0;
@@ -18,14 +19,13 @@ void setup() {
   #ifdef SERIAL_DEBUG_ENABLED        
     SERIAL_DEBUG.begin(SERIAL_BAUDRATE);
     while (!SERIAL_DEBUG) {;}
-    printInitInfo();
-    SERIAL_DEBUG.flush();
+    printInitInfo();    
   #endif
 
   // Delay time (5 sec.) for systems stabilization
   delay(5000);
 
-  // Initiate and check DHT sensor
+  // Initiate and check air temperature and humidity (DHT-22) sensor
   #ifdef SENSOR_DHT_ENABLED
     setupStatus = initSensorDHT();
     if (setupStatus != 0) {            
@@ -37,78 +37,170 @@ void setup() {
   #endif
 
   // Initiate I2C interface
-  #ifdef I2C1_ENABLED
-    #ifdef SERIAL_DEBUG_ENABLED
-        SERIAL_DEBUG.print(F("\n\tInitiating I2C1 interface as master... "));
-    #endif
-    Wire.begin();
-    #ifdef SERIAL_DEBUG_ENABLED
-        SERIAL_DEBUG.print(F("[OK]"));
-    #endif
-
-    #ifdef SENSOR_LIGHT_ENABLED
-      #ifdef SERIAL_DEBUG_ENABLED
-        SERIAL_DEBUG.print(F("\n\t\tInitiating light sensor... "));
+  #ifdef I2C1_ENABLED    
+    setupStatus = initI2C();
+    
+    if (setupStatus == 0) { 
+      #ifdef SENSOR_LIGHT_ENABLED    
+        // Initiate light (BH-1750) sensor 
+        setupStatus = initSensorLight();
       #endif
-      if (lightSensor.begin(BH1750::CONTINUOUS_HIGH_RES_MODE_2)) {
-        #ifdef SERIAL_DEBUG_ENABLED
-          SERIAL_DEBUG.print(F("[OK]"));
-        #endif
-      }
-      else {
-        setupStatus = 1;
-        #ifdef RGB_LED_ENABLED        
-          rgb_led.on(Color(255,0,0));
-        #endif
-        #ifdef SERIAL_DEBUG_ENABLED
-          SERIAL_DEBUG.print(F("[FAIL]"));
-        #endif
-      }
-    #endif
-  #endif
 
+      #ifdef SENSOR_POWER_SUPPLY_ENABLED
+        // Initiate power supply (INA-219) sensor
+        setupStatus = initSensorPowerSupply();
+      #endif 
+
+      #ifdef SENSOR_PRESSURE_ENABLED
+        // Initiate pressure (BMP-085) sensor
+        setupStatus = initSensorPressure();
+      #endif      
+    }
+
+    if (setupStatus != 0) {
+      // Put RGB LED in error mode
+      #ifdef RGB_LED_ENABLED        
+        rgb_led.on(Color(255,0,0));
+      #endif
+    }
+  #endif  
+  
+  // Initiate ultra violet (UVM-30A) sensor
   #ifdef SENSOR_UV_ENABLED
-    #ifdef SERIAL_DEBUG_ENABLED
-      SERIAL_DEBUG.print(F("\n\tInitiating UV sensor... "));
-    #endif
-    pinMode(SENSOR_UV_PIN, INPUT);
-    #ifdef SERIAL_DEBUG_ENABLED
-      SERIAL_DEBUG.print(F("[OK]"));
-    #endif
+    if (initSensorUV() != 0) {
+      // Put RGB LED in error mode
+      #ifdef RGB_LED_ENABLED        
+        rgb_led.on(Color(255,0,0));
+      #endif
+    }   
   #endif
 
   // Initiate One Wire interface
-  #ifdef ONE_WIRE_ENABLED
-    #ifdef SERIAL_DEBUG_ENABLED
-        SERIAL_DEBUG.print(F("\n\tInitiating One Wire interface... "));
-    #endif
-    oneWire.begin(ONE_WIRE_PIN);
-    #ifdef SERIAL_DEBUG_ENABLED
-        SERIAL_DEBUG.print(F("[OK]"));
-    #endif
-    
-    #ifdef SENSOR_SOIL_TEMP_ENABLED
-      #ifdef SERIAL_DEBUG_ENABLED
-          SERIAL_DEBUG.print(F("\n\t\tInitiating soil temperature sensor... "));
+  #ifdef ONE_WIRE_ENABLED    
+    setupStatus = initOneWire();
+        
+    if (setupStatus == 0) {     
+      #ifdef SENSOR_SOIL_TEMP_ENABLED
+        // Initiate soil temperature (DS18B20) sensor
+        setupStatus = initSensorSoilTemp();
       #endif
-      soil_temp_sensor.setOneWire(&oneWire);
-      soil_temp_sensor.begin();
-      soil_temp_sensor.getAddress(soil_temp_sensor_addr, 0);
-      #ifdef SERIAL_DEBUG_ENABLED
-          SERIAL_DEBUG.print(F("[OK]"));
+    }
+
+    if (setupStatus != 0) {
+      // Put RGB LED in error mode
+      #ifdef RGB_LED_ENABLED        
+        rgb_led.on(Color(255,0,0));
       #endif
-    #endif // SENSOR_SOIL_TEMP_ENABLED 
+    }
+  #endif    
+
+  // Initiate soil moisture (HD-38) sensor
+  #ifdef SENSOR_SOIL_MOISTURE_ENABLED
+    if (initSensorSoilMoisture() != 0) {
+      // Put RGB LED in error mode
+      #ifdef RGB_LED_ENABLED        
+        rgb_led.on(Color(255,0,0));
+      #endif
+    }  
+  #endif  
+
+  // Initiate leaf moisture (YL-38) sensor
+  #ifdef SENSOR_LEAF_MOISTURE_ENABLED
+    if (initSensorLeafMoisture() != 0) {
+      // Put RGB LED in error mode
+      #ifdef RGB_LED_ENABLED        
+        rgb_led.on(Color(255,0,0));
+      #endif
+    }  
+  #endif 
+
+  // Initiate wind direction (WIND SOCK) sensor
+  #ifdef SENSOR_WIND_SOCK_ENABLED
+    if (initSensorWindSock() != 0) {
+      // Put RGB LED in error mode
+      #ifdef RGB_LED_ENABLED        
+        rgb_led.on(Color(255,0,0));
+      #endif
+    }  
+  #endif // SENSOR_WIND_SOCK_ENABLED    
+
+  // Initiate wind speed (ANEMOMETER) sensor
+  #ifdef SENSOR_ANEMOMETER_ENABLED
+    if (initSensorAnemometer() != 0) {
+      // Put RGB LED in error mode
+      #ifdef RGB_LED_ENABLED        
+        rgb_led.on(Color(255,0,0));
+      #endif
+    }  
+  #endif // SENSOR_ANEMOMETER_ENABLED   
+
+  // Initiate rain (PLUVIOMETER) sensor
+  #ifdef SENSOR_PLUVIOMETER_ENABLED
+    if (initSensorPluviometer() != 0) {
+      // Put RGB LED in error mode
+      #ifdef RGB_LED_ENABLED        
+        rgb_led.on(Color(255,0,0));
+      #endif
+    }  
+  #endif // SENSOR_ANEMOMETER_ENABLED   
+
+  // Populate LoRa cofiguration struct
+  loraCfg.serialLora = &SERIAL_LORA;
+  loraCfg.baseband = AU920;
+  loraCfg.subband = 2;
+  loraCfg.op_class = A;
+  loraCfg.tx_power = dBm20;
+  loraCfg.uplink_dr = DR1;
+  // loraCfg.chan0_freq = chan0_freq;
+  loraCfg.chan0_dr = DR1;
+  // loraCfg.chan1_freq = chan1_freq;
+  loraCfg.chan1_dr = DR1;
+  // loraCfg.rxwin2_freq = rxwin2_freq;
+  loraCfg.rxwin2_dr = DR8;
+  loraCfg.adr = OFF;
+  loraCfg.auth_mode = LWABP;
+  loraCfg.dev_eui = dev_eui;
+  loraCfg.app_eui = app_eui;
+  // loraCfg.repeat = repeat;
+  // loraCfg.retry = retry;
+  loraCfg.dev_addr = dev_addr;
+  // loraCfg.app_key = app_key;
+  loraCfg.apps_key = apps_key;
+  loraCfg.nwks_key = nwks_key;
+  #ifdef SERIAL_DEBUG_ENABLED
+    loraCfg.serialDebug = &SERIAL_DEBUG;
+    loraCfg.debug = true;
   #endif
 
-  #ifdef SENSOR_SOIL_MOISTURE_ENABLED
-    #ifdef SERIAL_DEBUG_ENABLED
-      SERIAL_DEBUG.print(F("\n\tInitiating soil moisture sensor... "));
-    #endif
-    pinMode(SENSOR_SOIL_MOISTURE_PIN, INPUT);
-    #ifdef SERIAL_DEBUG_ENABLED
-      SERIAL_DEBUG.print(F("[OK]"));
-    #endif
+  // Initiate LoRa modem
+  #ifdef SERIAL_DEBUG_ENABLED
+    SERIAL_DEBUG.print(F("\n\tInitiating LoRaWAN modem... "));
+    SERIAL_DEBUG.flush();
   #endif
+  if (lora.init(loraCfg) != LORA_STATUS_OK) {
+    #ifdef SERIAL_DEBUG_ENABLED
+      if (!loraCfg.debug) {
+        SERIAL_DEBUG.print(F("[FAIL]"));      
+        SERIAL_DEBUG.flush();
+      }      
+    #endif
+
+    // Put RGB LED in error mode
+    #ifdef RGB_LED_ENABLED        
+      rgb_led.on(Color(255,0,0));
+    #endif
+    
+    // Put station in ERROR mode
+    delay(error_reset_period);
+    setup();
+  } else {
+    #ifdef SERIAL_DEBUG_ENABLED
+      if (!loraCfg.debug) {
+        SERIAL_DEBUG.print(F("[OK]"));
+        SERIAL_DEBUG.flush();
+      }
+    #endif
+  }
 
   // If setup status OK, turn off RGB LED
   if (POWER_SUPPLY == POWER_LINE) {
@@ -120,10 +212,11 @@ void setup() {
       #endif
     }
 
+  lastSystemPeriod = lastSamplingPeriod = lastTxPeriod = millis();
   }  
 }
 
-void loop() {
+void loop() {  
   // If device is power line based it will run continually
   if (POWER_SUPPLY == POWER_LINE) {
     
@@ -172,11 +265,19 @@ void loop() {
 
         // Initiage sampling process
         #ifdef SERIAL_DEBUG_ENABLED
-          SERIAL_DEBUG.print(F("\n\n========= Sampling sensor values at ")); SERIAL_DEBUG.print(now); SERIAL_DEBUG.print(F(" miliseconds ========="));
+          up_time_t time = getUpTime(now);
+          SERIAL_DEBUG.print(F("\n\n==========================================================="));
+          SERIAL_DEBUG.print(F("\nSampling sensor values with up time "));
+          SERIAL_DEBUG.print(time.years); SERIAL_DEBUG.print(F(" years, "));
+          SERIAL_DEBUG.print(time.months); SERIAL_DEBUG.print(F(" months, "));
+          SERIAL_DEBUG.print(time.days); SERIAL_DEBUG.print(F(" days, "));
+          SERIAL_DEBUG.print(time.hours); SERIAL_DEBUG.print(F(" hours, "));
+          SERIAL_DEBUG.print(time.minutes); SERIAL_DEBUG.print(F(" minutes and "));
+          SERIAL_DEBUG.print(time.seconds); SERIAL_DEBUG.print(F(" seconds"));
           SERIAL_DEBUG.flush();
         #endif
 
-        // Get DHT sensor values
+        // Get air temperature and humidity sensor values
         #ifdef SENSOR_DHT_ENABLED
           if (getDHTTemperature() != 0) {
             // Power on RGB LED in error mode
@@ -194,71 +295,106 @@ void loop() {
 
         // Get light sensor value
         #ifdef SENSOR_LIGHT_ENABLED
-          uint16_t lux = lightSensor.readLightLevel();
-          if (isnan(lux)) {
-            #ifdef SERIAL_DEBUG_ENABLED
-              SERIAL_DEBUG.println(F("Fail reading light sensor..."));
-            #endif
-          } else {
-            sensorsData.light += lux;
-            sensorsData.lightCount++;
-            #ifdef SERIAL_DEBUG_ENABLED
-              SERIAL_DEBUG.print(F("\nLight: ")); SERIAL_DEBUG.print(lux); SERIAL_DEBUG.print(F(" lux"));
+          if (getLightSensorValue() != 0) {
+            // Power on RGB LED in error mode
+            #ifdef RGB_LED_ENABLED          
+              rgb_led.on(Color(255,0,0));
             #endif
           }
         #endif
 
         // Get UV sensor value
         #ifdef SENSOR_UV_ENABLED
-          // Get voltage in miliVolts
-          int sensorValue = analogRead(SENSOR_UV_PIN);    // Get sensor value
-          int sensorVoltage = (sensorValue * (5.0 / 1023.0)) * 1000;    // Convert sensor value to miliVolts      
-          if (isnan(sensorVoltage)) {
-            #ifdef SERIAL_DEBUG_ENABLED
-              SERIAL_DEBUG.println(F("Fail reading UV sensor..."));
+          if (getUVSensorValue() != 0) {
+            // Power on RGB LED in error mode
+            #ifdef RGB_LED_ENABLED          
+              rgb_led.on(Color(255,0,0));
             #endif
-          } else {
-            sensorsData.uvVoltage += sensorVoltage;
-            sensorsData.uvVoltageCount++;
-            #ifdef SERIAL_DEBUG_ENABLED
-              SERIAL_DEBUG.print(F("\nUV voltage: ")); SERIAL_DEBUG.print(sensorVoltage); SERIAL_DEBUG.print(F(" miliVolts => Index: "));
-              SERIAL_DEBUG.print(convertVoltsToIndex(sensorVoltage));
-            #endif
-          }
+          }  
         #endif
 
         // Get soil temperature sensor value
-        #ifdef SENSOR_SOIL_TEMP_ENABLED
-          soil_temp_sensor.requestTemperatures();
-          float soil_temp = soil_temp_sensor.getTempC(soil_temp_sensor_addr);
-          if (isnan(soil_temp)) {
-            #ifdef SERIAL_DEBUG_ENABLED
-              SERIAL_DEBUG.println(F("Fail reading soil temperature sensor..."));
+        #ifdef SENSOR_SOIL_TEMP_ENABLED       
+          if (getSoilTempSensorValue() != 0) {
+            // Power on RGB LED in error mode
+            #ifdef RGB_LED_ENABLED          
+              rgb_led.on(Color(255,0,0));
             #endif
-          } else {
-            sensorsData.soilTemp += soil_temp;
-            sensorsData.soilTempCount++;
-            #ifdef SERIAL_DEBUG_ENABLED
-              SERIAL_DEBUG.print(F("\nSoil temperature: ")); SERIAL_DEBUG.print(soil_temp); SERIAL_DEBUG.print(F(" oC"));
-            #endif
-          }
-        #endif
+          }  
+        #endif                 
 
         // Get soil moisture sensor value
         #ifdef SENSOR_SOIL_MOISTURE_ENABLED
-          int soil_analog = analogRead(SENSOR_SOIL_MOISTURE_PIN);
-          if (isnan(soil_analog)) {
-            #ifdef SERIAL_DEBUG_ENABLED
-              SERIAL_DEBUG.println(F("Fail reading soil moisture sensor..."));
+          if (getSoilMoistureSensorValue() != 0) {
+            // Power on RGB LED in error mode
+            #ifdef RGB_LED_ENABLED          
+              rgb_led.on(Color(255,0,0));
             #endif
-          } else {
-            sensorsData.soilMoisture += map(soil_analog, 0, 1023, 100, 0);
-            sensorsData.soilMoistureCount++;
-            #ifdef SERIAL_DEBUG_ENABLED
-              SERIAL_DEBUG.print(F("\nSoil moisture: ")); SERIAL_DEBUG.print(soil_analog); SERIAL_DEBUG.print(F(" (0 - 1023) => "));
-              SERIAL_DEBUG.print(map(soil_analog, 0, 1023, 100, 0)); SERIAL_DEBUG.print(F(" %"));
+          }           
+        #endif 
+
+        // Get leaf moisture sensor value
+        #ifdef SENSOR_LEAF_MOISTURE_ENABLED
+          if (getLeafMoistureSensorValue() != 0) {
+            // Power on RGB LED in error mode
+            #ifdef RGB_LED_ENABLED          
+              rgb_led.on(Color(255,0,0));
+            #endif
+          }           
+        #endif        
+        
+        // Get pressure and device temperature sensor values
+        #ifdef SENSOR_PRESSURE_ENABLED
+          if (getPressureSensorValue() != 0) {
+            // Power on RGB LED in error mode
+            #ifdef RGB_LED_ENABLED          
+              rgb_led.on(Color(255,0,0));
             #endif
           }
+          if (getDeviceTempSensorValue() != 0) {
+            // Power on RGB LED in error mode
+            #ifdef RGB_LED_ENABLED          
+              rgb_led.on(Color(255,0,0));
+            #endif
+          }           
+        #endif        
+
+        // Get power supply sensor value
+        if (getPowerSupplySensorValue() != 0) {
+          // Power on RGB LED in error mode
+          #ifdef RGB_LED_ENABLED          
+            rgb_led.on(Color(255,0,0));
+          #endif
+        }                   
+
+        // Get wind direction sensor value
+        #ifdef SENSOR_WIND_SOCK_ENABLED
+          if (getWindDirectionSensorValue() != 0) {
+            // Power on RGB LED in error mode
+            #ifdef RGB_LED_ENABLED          
+              rgb_led.on(Color(255,0,0));
+            #endif
+          }            
+        #endif
+
+        // Get wind speed sensor value
+        #ifdef SENSOR_ANEMOMETER_ENABLED
+          if (getWindSpeedSensorValue() != 0) {
+            // Power on RGB LED in error mode
+            #ifdef RGB_LED_ENABLED          
+              rgb_led.on(Color(255,0,0));
+            #endif
+          }            
+        #endif
+
+        // Get rain volume sensor value
+        #ifdef SENSOR_PLUVIOMETER_ENABLED
+          if (getRainVolumeSensorValue() != 0) {
+            // Power on RGB LED in error mode
+            #ifdef RGB_LED_ENABLED          
+              rgb_led.on(Color(255,0,0));
+            #endif
+          }            
         #endif
 
         // Terminating sampling process
@@ -298,24 +434,47 @@ void loop() {
         delay(500);
 
         // Check if serial debug is enabled
-        #ifdef SERIAL_DEBUG_ENABLED   
-          SERIAL_DEBUG.print(F("\n\n========= Transmitting average values at ")); SERIAL_DEBUG.print(now); SERIAL_DEBUG.print(F(" milliseconds ========="));
-          SERIAL_DEBUG.print(F("\nAverage air temperature: ")); SERIAL_DEBUG.print(sensorsData.airTemp/sensorsData.airTempCount);
-          SERIAL_DEBUG.print(F(" oC (")); SERIAL_DEBUG.print(sensorsData.airTempCount); SERIAL_DEBUG.print(F(" sampling)"));
-          SERIAL_DEBUG.print(F("\nAverage air humidity: ")); SERIAL_DEBUG.print(sensorsData.airHumid/sensorsData.airHumidCount);
-          SERIAL_DEBUG.print(F(" oC (")); SERIAL_DEBUG.print(sensorsData.airHumidCount); SERIAL_DEBUG.print(F(" sampling)"));
-          SERIAL_DEBUG.print(F("\nAverage light: ")); SERIAL_DEBUG.print(sensorsData.light/sensorsData.lightCount);
-          SERIAL_DEBUG.print(F(" lux (")); SERIAL_DEBUG.print(sensorsData.lightCount); SERIAL_DEBUG.print(F(" sampling)"));
-          SERIAL_DEBUG.print(F("\nAverage UV tension: ")); SERIAL_DEBUG.print(sensorsData.uvVoltage/sensorsData.uvVoltageCount);
-          SERIAL_DEBUG.print(F(" miliVolts => Index: ")); SERIAL_DEBUG.print(convertVoltsToIndex(sensorsData.uvVoltage/sensorsData.uvVoltageCount));
-          SERIAL_DEBUG.print(F(" (")); SERIAL_DEBUG.print(sensorsData.uvVoltageCount); SERIAL_DEBUG.print(F(" sampling)"));    
-          SERIAL_DEBUG.print(F("\nAverage soil temperature: ")); SERIAL_DEBUG.print(sensorsData.soilTemp/sensorsData.soilTempCount);
-          SERIAL_DEBUG.print(F(" oC (")); SERIAL_DEBUG.print(sensorsData.soilTempCount); SERIAL_DEBUG.print(F(" sampling)")); 
-          SERIAL_DEBUG.print(F("\nAverage soil moisture: ")); SERIAL_DEBUG.print(sensorsData.soilMoisture/sensorsData.soilMoistureCount);
-          SERIAL_DEBUG.print(F(" % (")); SERIAL_DEBUG.print(sensorsData.soilMoistureCount); SERIAL_DEBUG.print(F(" sampling)"));   
-          SERIAL_DEBUG.print(F("\n===========================================================\n"));    
-          SERIAL_DEBUG.flush();
+        #ifdef SERIAL_DEBUG_ENABLED
+          printAverageValues();                       
         #endif
+
+        // Create message payload (25 bytes)
+        // ATS-02 payload layout:
+        // 2 bytes - air temperature (float2int15)
+        // 2 bytes - air umidity (float2uint16)        
+        // 2 bytes - soil temperature (float2int15)
+        // 2 bytes - soil moisture (float2uint16)
+        // 2 bytes - leaf moisture (float2uint16)
+        // 1 byte  - UV index (uint8)
+        // 2 bytes - light (float2uint16)        
+        // 2 bytes - wind direction voltage (float2uint16)
+        // 2 bytes - wind speed (float2uint16)
+        // 2 bytes - pluviometer turn around (uint16)
+        // 2 bytes - pressure (float2uint16)
+        // 2 byte  - device temperature (float2int15)
+        // 2 bytes - power supply (float2uint16)
+        payload = "";        
+        payload.concat(short2hex(float2int15((sensorsData.airTemp/sensorsData.airTempCount), 2)));
+        payload.concat(short2hex(float2uint16((sensorsData.airHumid/sensorsData.airHumidCount), 2)));
+        payload.concat(short2hex(float2int15((sensorsData.soilTemp/sensorsData.soilTempCount), 2)));
+        payload.concat(short2hex(float2uint16((sensorsData.soilMoisture/sensorsData.soilMoistureCount), 2)));
+        payload.concat(short2hex(float2uint16((sensorsData.leafMoisture/sensorsData.leafMoistureCount), 2)));
+        payload.concat(byte2hex(convertMilliVoltsToIndex(sensorsData.uvVoltage/sensorsData.uvVoltageCount)));              
+        payload.concat(short2hex(float2uint16((sensorsData.light/sensorsData.lightCount), 0)));
+        //payload.concat(short2hex(convertVoltsToWindDirection(sensorsData.windDirVoltage/sensorsData.windDirCount)));
+        payload.concat(short2hex(float2uint16((sensorsData.windDirVoltage/sensorsData.windDirCount), 2)));
+        payload.concat(short2hex(float2uint16((sensorsData.windSpeed/sensorsData.windSpeedCount), 2)));
+        noInterrupts();
+        uint16_t turn_around = sensorsData.pluviometerTurnAround;
+        sensorsData.pluviometerTurnAround = 0;
+        interrupts(); 
+        payload.concat(short2hex(turn_around));
+        payload.concat(short2hex(float2uint16((sensorsData.pressure/sensorsData.pressureCount), 0)));
+        payload.concat(short2hex(float2int15((sensorsData.devTemp/sensorsData.devTempCount), 2)));
+        payload.concat(short2hex(float2uint16((sensorsData.powerSupply/sensorsData.powerSupplyCount), 2)));                
+
+        // Send data values        
+        lora.sendNoAckMsgHex(1, payload);
 
         // Reset sensor data struct
         resetSensorDataStruct();
