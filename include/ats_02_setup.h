@@ -127,7 +127,7 @@ const char* power_supply_str[] = {"Battery", "Power Line"};
  * \def FW_VERSION 
  * Firmware version.
  */
-#define FW_VERSION              "0.1.0"
+#define FW_VERSION              "0.1.1"
 
 /**
  * \def HW_VERSION 

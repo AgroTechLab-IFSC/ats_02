@@ -666,20 +666,21 @@ uint8_t LoRa::sendNoAckMsgHex(uint8_t port, String buf) {
     at_cmd = "AT+MSGHEX=\"";
     at_cmd.concat(buf);
     at_cmd.concat("\"");    
-    this->config.serialLora->println(at_cmd);    
-    do {
-        while (this->config.serialLora->available()) {
-            loraReturn = this->config.serialLora->readString();
-            if (this->config.debug) {
-                this->config.serialDebug->print("\n");
-                this->config.serialDebug->print(loraReturn);
-                this->config.serialDebug->flush();        
-            }                        
-            if (loraReturn.indexOf("Done") != -1) {                
-                this->loraBusy = false;
-            }
-        }  
-    } while (this->loraBusy);
+    this->config.serialLora->println(at_cmd); 
+    delay(1000);   
+    // do {
+    //     while (this->config.serialLora->available()) {
+    //         loraReturn = this->config.serialLora->readString();
+    //         if (this->config.debug) {
+    //             this->config.serialDebug->print("\n");
+    //             this->config.serialDebug->print(loraReturn);
+    //             this->config.serialDebug->flush();        
+    //         }                        
+    //         if (loraReturn.indexOf("Done") != -1) {                
+    //             this->loraBusy = false;
+    //         }
+    //     }  
+    // } while (this->loraBusy);
 
     return LORA_STATUS_OK;
 }
