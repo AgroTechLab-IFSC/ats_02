@@ -304,11 +304,11 @@ const unsigned long error_reset_period = 60 * systemPeriod;      /**< Error rese
 /*********************************************
  *             TTN PARAMETERS
  ********************************************/
-const char* dev_eui = "70B3D57ED0047B03";                       /**< Device EUI for TTN network. */
+const char* dev_eui = "0000000000000000";                       /**< Device EUI for TTN network. */
 const char* app_eui = "0000000000000000";                       /**< Application EUI for TTN network. */
-const char* app_key = "103CF98370483258CD3B0202ACCD26D8";       /**< Application Key for TTN network. */
-const char* apps_key = "7A01D13AA6B829961AB8792F3C09543C";      /**< Application Session Key for TTN network. */
-const char* nwks_key = "4C9264F78B746D9FF205C41CD65E46E5";      /**< Network Session Key for TTN network. */ 
-const char* dev_addr = "260DE8CD";                              /**< Device address for TTN network. */
+const char* app_key = "00000000000000000000000000000000";       /**< Application Key for TTN network. */
+const char* apps_key = "00000000000000000000000000000000";      /**< Application Session Key for TTN network. */
+const char* nwks_key = "00000000000000000000000000000000";      /**< Network Session Key for TTN network. */ 
+const char* dev_addr = "00000000";                              /**< Device address for TTN network. */
 
 #endif // #ifndef __ATS_02_SETUP_H__
