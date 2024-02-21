@@ -1,6 +1,6 @@
 #  ATS-02
 
-It is a weather station that uses LoRaWAN&reg; module to sent simulated IoT data to TTN&reg; (<a href="https://www.thethingsnetwork.org">The Things Network</a>) infrastructure.<br>
+It is a weather station that uses LoRaWAN&reg; module to sent IoT data to TTN&reg; (<a href="https://www.thethingsnetwork.org">The Things Network</a>) infrastructure.<br>
 
 ---
 ## Hardware Requirements
